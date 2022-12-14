@@ -4,7 +4,7 @@ from setuptools import find_packages, setup
 extras = {"dev": ["pre-commit == 2.18.1"]}
 
 setup(
-    name="nn-deployment-course",
+    name="mcu",
     packages=find_packages(
         exclude=["tests", "tests.*"], include=["nn_deployment_course"]
     ),
