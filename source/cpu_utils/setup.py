@@ -9,12 +9,15 @@ setup(
         exclude=["tests", "tests.*"], include=["nn_deployment_course"]
     ),
     install_requires=[
-        "torch",
+        "torch == 1.12",
         "torchvision",
         "jupyter",
         "matplotlib",
         "opencv-python",
         "onnx",
+        "onnxruntime",
+        "openvino",
+        "openvino-dev",
     ],
     extras_require=extras,
 )
