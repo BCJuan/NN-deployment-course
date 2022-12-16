@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 import torch
+from addict import Dict
+from openvino.tools.pot.api import DataLoader, Metric
 
 label_map = [
     (0, 0, 0),  # background
@@ -54,3 +56,96 @@ def image_overlay(image, segmented_image):
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     cv2.addWeighted(image, alpha, segmented_image, beta, gamma, image)
     return image
+
+
+# Create a DataLoader from a CIFAR10 dataset.
+class CifarDataLoader(DataLoader):
+    def __init__(self, config, dataset):
+        """
+        Initialize config and dataset.
+        :param config: created config with DATA_DIR path.
+        """
+        if not isinstance(config, Dict):
+            config = Dict(config)
+        super().__init__(config)
+        self.indexes, self.pictures, self.labels = self.load_data(dataset)
+
+    def __len__(self):
+        return len(self.labels)
+
+    def __getitem__(self, index):
+        """
+        Return one sample of index, label and picture.
+        :param index: index of the taken sample.
+        """
+        if index >= len(self):
+            raise IndexError
+
+        return (self.indexes[index], self.labels[index]), self.pictures[index].numpy()
+
+    def load_data(self, dataset):
+        """
+        Load dataset in needed format.
+        :param dataset:  downloaded dataset.
+        """
+        pictures, labels, indexes = [], [], []
+
+        for idx, sample in enumerate(dataset):
+            pictures.append(sample[0])
+            labels.append(sample[1])
+            indexes.append(idx)
+
+        return indexes, pictures, labels
+
+
+# Custom implementation of classification accuracy metric.
+
+
+class Accuracy(Metric):
+
+    # Required methods
+    def __init__(self, top_k=1):
+        super().__init__()
+        self._top_k = top_k
+        self._name = "accuracy@top{}".format(self._top_k)
+        self._matches = []
+
+    @property
+    def value(self):
+        """Returns accuracy metric value for the last model output."""
+        return {self._name: self._matches[-1]}
+
+    @property
+    def avg_value(self):
+        """Returns accuracy metric value for all model outputs."""
+        return {self._name: np.ravel(self._matches).mean()}
+
+    def update(self, output, target):
+        """Updates prediction matches.
+        :param output: model output
+        :param target: annotations
+        """
+        if len(output) > 1:
+            raise Exception(
+                "The accuracy metric cannot be calculated "
+                "for a model with multiple outputs"
+            )
+        if isinstance(target, dict):
+            target = list(target.values())
+        predictions = np.argsort(output[0], axis=1)[:, -self._top_k :]
+        match = [float(t in predictions[i]) for i, t in enumerate(target)]
+
+        self._matches.append(match)
+
+    def reset(self):
+        """Resets collected matches"""
+        self._matches = []
+
+    def get_attributes(self):
+        """
+        Returns a dictionary of metric attributes {metric_name:
+            {attribute_name: value}}.
+        Required attributes: 'direction': 'higher-better' or 'higher-worse'
+                             'type': metric type
+        """
+        return {self._name: {"direction": "higher-better", "type": "accuracy"}}
