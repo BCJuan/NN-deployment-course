@@ -16,3 +16,5 @@ pip install -e .[dev]
 ````
 
 Then, you can run the notebooks in each chapter.
+
+In the GPU case, to be able to install the nvidia-tensorrt package remember to add `--extra-index-url https://pypi.ngc.nvidia.com` to the pip installation command.
