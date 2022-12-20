@@ -9,16 +9,17 @@ setup(
         exclude=["tests", "tests.*"], include=["nn_deployment_course"]
     ),
     install_requires=[
-        "torch == 1.12",
+        "torch ~= 1.12, < 1.13",
         "torchvision",
         "jupyter",
         "matplotlib",
         "opencv-python",
-        "onnx",
+        "onnx ~= 1.11, < 1.12",
         "onnxruntime",
         "nvidia-tensorrt",
         "pytorch-lightning",
         "pycuda",
+        "protobuf == 3.20.0",
     ],
     extras_require=extras,
 )

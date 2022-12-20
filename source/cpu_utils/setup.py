@@ -5,9 +5,7 @@ extras = {"dev": ["pre-commit == 2.18.1"]}
 
 setup(
     name="cpu",
-    packages=find_packages(
-        exclude=["tests", "tests.*"], include=["nn_deployment_course"]
-    ),
+    packages=find_packages(exclude=["tests", "tests.*"], include=["cpu"]),
     install_requires=[
         "torch == 1.12",
         "torchvision",
